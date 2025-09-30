@@ -6,9 +6,9 @@ import PricesRepository, { ApiPrice, MAX_PRICES } from '../repositories/PricesRe
 import BitfinexApi from './price-feeds/bitfinex-api';
 import BitflyerApi from './price-feeds/bitflyer-api';
 import CoinbaseApi from './price-feeds/coinbase-api';
+import FreeCurrencyApi from './price-feeds/free-currency-api';
 import GeminiApi from './price-feeds/gemini-api';
 import KrakenApi from './price-feeds/kraken-api';
-import FreeCurrencyApi from './price-feeds/free-currency-api';
 
 export interface PriceFeed {
   name: string;

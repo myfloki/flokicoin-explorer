@@ -390,23 +390,34 @@ class ElectrsApi implements AbstractBitcoinApi {
   }
 
   $getAddressTransactions(address: string, txId?: string): Promise<IEsploraApi.Transaction[]> {
-    throw new Error('Method getAddressTransactions not implemented.');
+    if (txId && txId.length) {
+      return this.failoverRouter.$get<IEsploraApi.Transaction[]>(`/address/${address}/txs/chain/${txId}`);
+    }
+    return this.failoverRouter.$get<IEsploraApi.Transaction[]>(`/address/${address}/txs`);
   }
 
   $getScriptHash(scripthash: string): Promise<IEsploraApi.ScriptHash> {
-    throw new Error('Method getScriptHash not implemented.');
+    return this.failoverRouter.$get<IEsploraApi.ScriptHash>(`/scripthash/${scripthash}`);
   }
 
   $getScriptHashTransactions(scripthash: string, txId?: string): Promise<IEsploraApi.Transaction[]> {
-    throw new Error('Method getScriptHashTransactions not implemented.');
+    if (txId && txId.length) {
+      return this.failoverRouter.$get<IEsploraApi.Transaction[]>(`/scripthash/${scripthash}/txs/chain/${txId}`);
+    }
+    return this.failoverRouter.$get<IEsploraApi.Transaction[]>(`/scripthash/${scripthash}/txs`);
   }
 
   $getAddressPrefix(prefix: string): string[] {
-    throw new Error('Method not implemented.');
+    // Esplora endpoint returns JSON array of strings
+    // Use GET and return directly
+    // Note: typing matches string[]
+    // @ts-ignore
+    return this.failoverRouter.$get<string[]>(`/address-prefix/${prefix}`) as unknown as string[];
   }
 
   $sendRawTransaction(rawTransaction: string): Promise<string> {
-    throw new Error('Method not implemented.');
+    // Esplora expects raw hex in request body, content-type text/plain
+    return this.failoverRouter.$post<string>('/tx', rawTransaction, 'text');
   }
 
   $testMempoolAccept(rawTransactions: string[], maxfeerate?: number): Promise<TestMempoolAcceptResult[]> {
@@ -426,7 +437,10 @@ class ElectrsApi implements AbstractBitcoinApi {
   }
 
   async $getBatchedOutspends(txids: string[]): Promise<IEsploraApi.Outspend[][]> {
-    throw new Error('Method not implemented.');
+    // Batch by doing parallel requests to /tx/:txid/outspends
+    // Limit concurrency implicitly by Promise.all on provided (route already caps list to 50)
+    const results = await Promise.all(txids.map((txid) => this.$getOutspends(txid)));
+    return results;
   }
 
   async $getBatchedOutspendsInternal(txids: string[]): Promise<IEsploraApi.Outspend[][]> {

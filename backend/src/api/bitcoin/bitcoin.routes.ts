@@ -1,26 +1,25 @@
-import { Application, Request, Response } from 'express';
-import axios from 'axios';
 import * as bitcoinjs from 'bitcoinjs-lib';
+import { Application, Request, Response } from 'express';
 import config from '../../config';
-import websocketHandler from '../websocket-handler';
-import mempool from '../mempool';
-import feeApi from '../fee-api';
-import mempoolBlocks from '../mempool-blocks';
-import bitcoinApi from './bitcoin-api-factory';
-import { Common } from '../common';
-import backendInfo from '../backend-info';
-import transactionUtils from '../transaction-utils';
-import { IEsploraApi } from './esplora-api.interface';
-import loadingIndicators from '../loading-indicators';
-import { TransactionExtended } from '../../mempool.interfaces';
 import logger from '../../logger';
-import blocks from '../blocks';
-import bitcoinClient from './bitcoin-client';
-import difficultyAdjustment from '../difficulty-adjustment';
+import { TransactionExtended } from '../../mempool.interfaces';
 import transactionRepository from '../../repositories/TransactionRepository';
-import rbfCache from '../rbf-cache';
-import { calculateMempoolTxCpfp } from '../cpfp';
 import { handleError } from '../../utils/api';
+import backendInfo from '../backend-info';
+import blocks from '../blocks';
+import { Common } from '../common';
+import { calculateMempoolTxCpfp } from '../cpfp';
+import difficultyAdjustment from '../difficulty-adjustment';
+import feeApi from '../fee-api';
+import loadingIndicators from '../loading-indicators';
+import mempool from '../mempool';
+import mempoolBlocks from '../mempool-blocks';
+import rbfCache from '../rbf-cache';
+import transactionUtils from '../transaction-utils';
+import websocketHandler from '../websocket-handler';
+import bitcoinApi from './bitcoin-api-factory';
+import bitcoinClient from './bitcoin-client';
+import { IEsploraApi } from './esplora-api.interface';
 
 const TXID_REGEX = /^[a-f0-9]{64}$/i;
 const BLOCK_HASH_REGEX = /^[a-f0-9]{64}$/i;
@@ -56,6 +55,7 @@ class BitcoinRoutes {
       .get(config.MEMPOOL.API_URL_PREFIX + 'blocks-bulk/:from/:to', this.getBlocksByBulk.bind(this))
       // Temporarily add txs/package endpoint for all backends until esplora supports it
       .post(config.MEMPOOL.API_URL_PREFIX + 'txs/package', this.$submitPackage)
+      .get(config.MEMPOOL.API_URL_PREFIX + 'block/:hash/txs/:index', this.getBlockTransactions)
       ;
 
       if (config.MEMPOOL.BACKEND !== 'esplora') {
@@ -75,7 +75,7 @@ class BitcoinRoutes {
           .get(config.MEMPOOL.API_URL_PREFIX + 'block/:hash/raw', this.getRawBlock)
           .get(config.MEMPOOL.API_URL_PREFIX + 'block/:hash/txids', this.getTxIdsForBlock)
           .get(config.MEMPOOL.API_URL_PREFIX + 'block/:hash/txs', this.getBlockTransactions)
-          .get(config.MEMPOOL.API_URL_PREFIX + 'block/:hash/txs/:index', this.getBlockTransactions)
+
           .get(config.MEMPOOL.API_URL_PREFIX + 'block-height/:height', this.getBlockHeight)
           .get(config.MEMPOOL.API_URL_PREFIX + 'address/:address', this.getAddress)
           .get(config.MEMPOOL.API_URL_PREFIX + 'address/:address/txs', this.getAddressTransactions)
@@ -83,6 +83,31 @@ class BitcoinRoutes {
           .get(config.MEMPOOL.API_URL_PREFIX + 'scripthash/:scripthash', this.getScriptHash)
           .get(config.MEMPOOL.API_URL_PREFIX + 'scripthash/:scripthash/txs', this.getScriptHashTransactions)
           .get(config.MEMPOOL.API_URL_PREFIX + 'scripthash/:scripthash/txs/summary', this.getScriptHashTransactionSummary)
+          .get(config.MEMPOOL.API_URL_PREFIX + 'address-prefix/:prefix', this.getAddressPrefix)
+          ;
+      }
+      // Enable the Esplora-supported routes when using esplora backend
+      if (config.MEMPOOL.BACKEND === 'esplora') {
+        app
+          .get(config.MEMPOOL.API_URL_PREFIX + 'mempool', this.getMempool)
+          .get(config.MEMPOOL.API_URL_PREFIX + 'mempool/txids', this.getMempoolTxIds)
+          .get(config.MEMPOOL.API_URL_PREFIX + 'mempool/recent', this.getRecentMempoolTransactions)
+          .get(config.MEMPOOL.API_URL_PREFIX + 'tx/:txId', this.getTransaction)
+          .post(config.MEMPOOL.API_URL_PREFIX + 'tx', this.$postTransaction)
+          .get(config.MEMPOOL.API_URL_PREFIX + 'tx/:txId/hex', this.getRawTransaction)
+          .get(config.MEMPOOL.API_URL_PREFIX + 'tx/:txId/status', this.getTransactionStatus)
+          .get(config.MEMPOOL.API_URL_PREFIX + 'tx/:txId/outspends', this.getTransactionOutspends)
+          .get(config.MEMPOOL.API_URL_PREFIX + 'txs/outspends', this.$getBatchedOutspends)
+          .get(config.MEMPOOL.API_URL_PREFIX + 'block/:hash/header', this.getBlockHeader)
+          .get(config.MEMPOOL.API_URL_PREFIX + 'blocks/tip/hash', this.getBlockTipHash)
+          .get(config.MEMPOOL.API_URL_PREFIX + 'block/:hash/raw', this.getRawBlock)
+          .get(config.MEMPOOL.API_URL_PREFIX + 'block/:hash/txids', this.getTxIdsForBlock)
+          .get(config.MEMPOOL.API_URL_PREFIX + 'block/:hash/txs', this.getBlockTransactions)
+          .get(config.MEMPOOL.API_URL_PREFIX + 'block-height/:height', this.getBlockHeight)
+          .get(config.MEMPOOL.API_URL_PREFIX + 'address/:address', this.getAddress)
+          .get(config.MEMPOOL.API_URL_PREFIX + 'address/:address/txs', this.getAddressTransactions)
+          .get(config.MEMPOOL.API_URL_PREFIX + 'scripthash/:scripthash', this.getScriptHash)
+          .get(config.MEMPOOL.API_URL_PREFIX + 'scripthash/:scripthash/txs', this.getScriptHashTransactions)
           .get(config.MEMPOOL.API_URL_PREFIX + 'address-prefix/:prefix', this.getAddressPrefix)
           ;
       }
@@ -639,8 +664,18 @@ class BitcoinRoutes {
 
   private async getAddressTransactionSummary(req: Request, res: Response): Promise<void> {
     if (config.MEMPOOL.BACKEND !== 'esplora') {
-      handleError(req, res, 405, 'Address summary lookups require mempool/electrs backend.');
+      handleError(req, res, 405, 'Address summary lookups require esplora backend.');
       return;
+    }
+    if (!ADDRESS_REGEX.test(req.params.address)) {
+      handleError(req, res, 501, `Invalid address`);
+      return;
+    }
+    try {
+      const summary = await bitcoinApi.$getAddressTransactionSummary(req.params.address);
+      res.json(summary);
+    } catch (e) {
+      handleError(req, res, 500, 'Failed to get address transaction summary');
     }
   }
 

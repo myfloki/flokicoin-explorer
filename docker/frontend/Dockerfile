@@ -20,16 +20,11 @@ LABEL org.opencontainers.image.source="https://github.com/myfloki/operator-plus"
 
 WORKDIR /patch
 
-# Copy runtime scripts from docker/ context and built app from builder
-COPY --from=docker frontend/entrypoint.sh .
-COPY --from=docker frontend/wait-for .
+COPY --from=builder /build/entrypoint.sh .
+COPY --from=builder /build/wait-for .
 COPY --from=builder /build/dist/mempool /var/www/mempool
-
-# Copy nginx configs from repo root context
-COPY --from=root nginx.conf /etc/nginx/
-# nginx.conf expects this file at /etc/nginx/nginx-mempool.conf
-COPY --from=root nginx-mempool.conf /etc/nginx/
-COPY --from=root nginx-mempool.conf /etc/nginx/conf.d/nginx-mempool.conf
+COPY --from=builder /build/nginx.conf /etc/nginx/
+COPY --from=builder /build/nginx-mempool.conf /etc/nginx/conf.d/
 
 RUN chmod +x /patch/entrypoint.sh
 RUN chmod +x /patch/wait-for

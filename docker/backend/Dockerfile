@@ -17,27 +17,21 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sed 's#/proc/sel
 ENV PATH="/root/.cargo/bin:$PATH"
 
 COPY --from=backend . .
-# Copy the Rust GBT project into /rust/gbt so backend preinstall can cd ../rust/gbt
-COPY --from=rustgbt . ../rust/gbt/
+COPY --from=rustgbt . ../rust/
 ENV FD=/build/rust-gbt
 RUN npm install --omit=dev --omit=optional
 
 WORKDIR /build
 RUN npm run package
 
-FROM node:24
+FROM node:24-alpine3.21
 
 WORKDIR /backend
 
 RUN chown 1000:1000 ./
-RUN apt-get update && apt-get install -y --no-install-recommends bash && rm -rf /var/lib/apt/lists/*
 COPY --from=builder --chown=1000:1000 /build/package ./package/
-# Ensure GeoIP directory exists; optional data can be mounted or added later
-RUN mkdir -p /backend/GeoIP
-# Copy runtime scripts and config from docker context
-COPY --from=docker --chown=1000:1000 backend/mempool-config.json ./mempool-config.json
-COPY --from=docker --chown=1000:1000 backend/start.sh ./start.sh
-COPY --from=docker --chown=1000:1000 backend/wait-for-it.sh ./wait-for-it.sh
+COPY --from=builder --chown=1000:1000 /build/GeoIP ./GeoIP/
+COPY --from=builder --chown=1000:1000 /build/mempool-config.json /build/start.sh /build/wait-for-it.sh ./
 
 USER 1000
 

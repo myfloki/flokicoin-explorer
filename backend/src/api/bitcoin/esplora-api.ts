@@ -1,12 +1,12 @@
-import config from '../../config';
 import axios, { isAxiosError } from 'axios';
 import http from 'http';
-import { AbstractBitcoinApi, HealthCheckHost } from './bitcoin-api-abstract-factory';
-import { IEsploraApi } from './esplora-api.interface';
+import os from 'os';
+import config from '../../config';
 import logger from '../../logger';
 import { Common } from '../common';
+import { AbstractBitcoinApi, HealthCheckHost } from './bitcoin-api-abstract-factory';
 import { SubmitPackageResult, TestMempoolAcceptResult } from './bitcoin-api.interface';
-import os from 'os';
+import { IEsploraApi } from './esplora-api.interface';
 interface FailoverHost {
   host: string,
   rtts: number[],
@@ -365,7 +365,7 @@ class ElectrsApi implements AbstractBitcoinApi {
   }
 
   $getTxsForBlock(hash: string): Promise<IEsploraApi.Transaction[]> {
-    return this.failoverRouter.$get<IEsploraApi.Transaction[]>('/internal/block/' + hash + '/txs');
+    return this.failoverRouter.$get<IEsploraApi.Transaction[]>('/block/' + hash + '/txs');
   }
 
   $getBlockHash(height: number): Promise<string> {

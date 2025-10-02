@@ -33,17 +33,17 @@ const ADDRESS_CHARS: {
   };
 } = {
   mainnet: {
-    base58: `[13]` // Starts with a single 1 or 3
+    base58: `[F]` // Starts with a single 1 or 3
       + BASE58_CHARS
       + `{26,33}`, // Repeat the previous char 26-33 times.
       // Version byte 0x00 (P2PKH) can be as short as 27 characters, up to 34 length
       // P2SH must be 34 length
     bech32: `(?:`
-        + `bc1` // Starts with bc1
+        + `fc1` // Starts with bc1
         + BECH32_CHARS_LW
         + `{6,100}` // As per bech32, 6 char checksum is minimum
       + `|`
-        + `BC1` // All upper case version
+        + `FC1` // All upper case version
         + BECH32_CHARS_UP
         + `{6,100}`
       + `)`,
@@ -53,11 +53,11 @@ const ADDRESS_CHARS: {
       + BASE58_CHARS
       + `{33,34}`, // m|n is 34 length, 2 is 35 length (We match the first letter separately)
     bech32: `(?:`
-        + `tb1` // Starts with tb1
+        + `tf1` // Starts with tb1
         + BECH32_CHARS_LW
         + `{6,100}` // As per bech32, 6 char checksum is minimum
       + `|`
-        + `TB1` // All upper case version
+        + `TF1` // All upper case version
         + BECH32_CHARS_UP
         + `{6,100}`
       + `)`,
@@ -67,11 +67,11 @@ const ADDRESS_CHARS: {
       + BASE58_CHARS
       + `{33,34}`, // m|n is 34 length, 2 is 35 length (We match the first letter separately)
     bech32: `(?:`
-        + `tb1` // Starts with tb1
+        + `tf1` // Starts with tb1
         + BECH32_CHARS_LW
         + `{6,100}` // As per bech32, 6 char checksum is minimum
       + `|`
-        + `TB1` // All upper case version
+        + `TF1` // All upper case version
         + BECH32_CHARS_UP
         + `{6,100}`
       + `)`,
@@ -81,11 +81,11 @@ const ADDRESS_CHARS: {
       + BASE58_CHARS
       + `{33,34}`,
     bech32: `(?:`
-        + `tb1` // Starts with tb1
+        + `tf1` // Starts with tb1
         + BECH32_CHARS_LW
         + `{6,100}`
       + `|`
-        + `TB1` // All upper case version
+        + `TF1` // All upper case version
         + BECH32_CHARS_UP
         + `{6,100}`
       + `)`,

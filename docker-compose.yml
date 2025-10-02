@@ -53,7 +53,7 @@ services:
       MEMPOOL_NETWORK: "testnet"
 
       MEMPOOL_BACKEND: "esplora"
-      ESPLORA_REST_API_URL: http://lab.in.ionance.com:3000
+      ESPLORA_REST_API_URL: http://62.171.141.201:3000
 
       MEMPOOL_AUTOMATIC_POOLS_UPDATE: true
       MEMPOOL_POOLS_JSON_URL: "https://raw.githubusercontent.com/myfloki/community-tools/main/assets/pools.json"

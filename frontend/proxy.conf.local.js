@@ -103,6 +103,12 @@ PROXY_CONFIG.push(...[
     pathRewrite: {
         "^/api/": "/api/v1/"
     },
+  },
+  {
+    context: ['/resources/mining-pools/**'],
+    target: 'https://mempool.space',
+    secure: false,
+    changeOrigin: true,
   }
 ]);
 

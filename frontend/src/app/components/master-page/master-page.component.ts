@@ -1,12 +1,12 @@
-import { Component, OnInit, OnDestroy, Input, ViewChild } from '@angular/core';
+import { Component, Input, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
-import { Env, StateService } from '@app/services/state.service';
-import { Observable, merge, of, Subscription } from 'rxjs';
-import { LanguageService } from '@app/services/language.service';
 import { EnterpriseService } from '@app/services/enterprise.service';
+import { LanguageService } from '@app/services/language.service';
 import { NavigationService } from '@app/services/navigation.service';
-import { MenuComponent } from '@components/menu/menu.component';
+import { Env, StateService } from '@app/services/state.service';
 import { StorageService } from '@app/services/storage.service';
+import { MenuComponent } from '@components/menu/menu.component';
+import { merge, Observable, of, Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-master-page',
@@ -32,6 +32,10 @@ export class MasterPageComponent implements OnInit, OnDestroy {
   servicesEnabled = false;
   menuOpen = false;
   isDropdownVisible: boolean;
+
+  get currentNetworkIcon(): string {
+    return this.env?.ROOT_NETWORK !== 'mainnet' ? 'testnet' : 'flokicoin';
+  }
   
   enterpriseInfo: any;
   enterpriseInfo$: Subscription;

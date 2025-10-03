@@ -365,7 +365,7 @@ class ElectrsApi implements AbstractBitcoinApi {
   }
 
   $getTxsForBlock(hash: string): Promise<IEsploraApi.Transaction[]> {
-    return this.failoverRouter.$get<IEsploraApi.Transaction[]>('/block/' + hash + '/txs');
+    return this.failoverRouter.$get<IEsploraApi.Transaction[]>('/internal/block/' + hash + '/txs');
   }
 
   $getBlockHash(height: number): Promise<string> {

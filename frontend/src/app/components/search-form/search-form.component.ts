@@ -10,6 +10,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
 import { ApiService } from '@app/services/api.service';
 import { SearchResultsComponent } from '@components/search-form/search-results/search-results.component';
 import { Network, findOtherNetworks, getRegex, getTargetUrl, needBaseModuleChange } from '@app/shared/regex.utils';
+import { NavigationService } from '@app/services/navigation.service';
 
 @Component({
   selector: 'app-search-form',
@@ -28,6 +29,7 @@ export class SearchFormComponent implements OnInit {
   typeAhead$: Observable<any>;
   searchForm: UntypedFormGroup;
   dropdownHidden = false;
+  networkPaths: { [network: string]: string };
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event) {
@@ -47,6 +49,7 @@ export class SearchFormComponent implements OnInit {
 
   focus$ = new Subject<string>();
   click$ = new Subject<string>();
+  
 
   @Output() searchTriggered = new EventEmitter();
   @ViewChild('searchResults') searchResults: SearchResultsComponent;
@@ -64,7 +67,8 @@ export class SearchFormComponent implements OnInit {
     private electrsApiService: ElectrsApiService,
     private apiService: ApiService,
     private relativeUrlPipe: RelativeUrlPipe,
-    private elementRef: ElementRef
+    private elementRef: ElementRef,
+    private navigationService: NavigationService,
   ) {
   }
 
@@ -227,6 +231,10 @@ export class SearchFormComponent implements OnInit {
           };
         })
       );
+
+      this.navigationService.subnetPaths.subscribe((paths) => {
+      this.networkPaths = paths;
+    });
   }
 
   handleKeyDown($event): void {
@@ -313,7 +321,12 @@ export class SearchFormComponent implements OnInit {
     if (needBaseModuleChange(this.env.BASE_MODULE as 'liquid' | 'mempool', swapNetwork as Network)) {
       window.location.href = getTargetUrl(swapNetwork as Network, searchText, this.env);
     } else {
-      this.router.navigate([this.relativeUrlPipe.transform(url, swapNetwork), searchText], extras);
+      if(swapNetwork && this.networkPaths[swapNetwork] && swapNetwork !== this.stateService.env.ROOT_NETWORK){
+        window.location.href = `${this.networkPaths[swapNetwork]}${url}${searchText}`;
+      }else{
+        this.router.navigate([this.relativeUrlPipe.transform(url, swapNetwork), searchText], extras);
+      }
+      
       this.searchTriggered.emit();
       this.searchForm.setValue({
         searchText: '',

@@ -20,7 +20,7 @@ export class RelativeUrlPipe implements PipeTransform {
     } else if (this.stateService.env.BASE_MODULE !== 'mempool') {
       network = '';
     }
-    return (network ? '/' + network : '') + value;
+    return value;
   }
 
 }

@@ -101,7 +101,7 @@ function downloadMiningPoolLogos$() {
     console.log(`${LOG_TAG} \tChecking if mining pool logos needs downloading or updating...`);
     const options = {
       host: 'api.github.com',
-      path: '/repos/mempool/mining-pool-logos/contents/',
+      path: '/repos/myfloki/mining-pool-logos/contents/',
       method: 'GET',
       headers: {'user-agent': 'node.js'}
     };

@@ -14,8 +14,8 @@ services:
     command: "flokicoind -C=/node/flokicoind.conf --txindex"
   
   electrum:
-    hostname: mainnet-electrum
-    container_name: mainnet-electrum
+    hostname: electrum
+    container_name: electrum
     image: ghcr.io/myfloki/electrs:0.1.1-beta
     ports:
       - "50001:50001"
@@ -44,21 +44,7 @@ services:
         --enable-json-rpc-logging
         --index-unspendables
 
-  # esplora-proxy:
-  #   image: nginx:alpine
-  #   container_name: esplora-proxy
-  #   depends_on:
-  #     - electrum
-  #   ports:
-  #     - "3000:3000"
-  #   volumes:
-  #     - ./data/electrum/nginx.conf:/etc/nginx/conf.d/default.conf:ro
-  #   healthcheck:
-  #     test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/blocks/tip/height | grep -E '^[0-9]+$' >/dev/null"]
-  #     interval: 30s
-  #     timeout: 5s
-  #     retries: 3
-  #   restart: unless-stopped
+
 
   explorer_web:
     hostname: explorer-web
@@ -100,7 +86,7 @@ services:
       MEMPOOL_NETWORK: "mainnet"
 
       MEMPOOL_BACKEND: "esplora"
-      ESPLORA_REST_API_URL: http://mainnet-electrum:3000
+      ESPLORA_REST_API_URL: http://electrum:3000
 
       MEMPOOL_AUTOMATIC_POOLS_UPDATE: true
       MEMPOOL_POOLS_JSON_URL: "https://raw.githubusercontent.com/myfloki/community-tools/main/assets/pools.json"

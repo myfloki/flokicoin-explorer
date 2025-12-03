@@ -937,14 +937,14 @@ class Blocks {
       this.updateTimerProgress(timer, `getting block data for ${this.currentBlockHeight}`);
       const blockHash = await bitcoinCoreApi.$getBlockHash(this.currentBlockHeight);
       const verboseBlock = await bitcoinClient.getBlock(blockHash, 2);
-      const block = BitcoinApi.convertBlock(verboseBlock);  // FLZ_CHANGE
-      const txIds: string[] = verboseBlock.rawtx.map(tx => tx.txid);
+      const block = BitcoinApi.convertBlock(verboseBlock);  // FLZ_CHANGE UNDO
+      const txIds: string[] = verboseBlock.tx.map(tx => tx.txid);
       const transactions = await this.$getTransactionsExtended(blockHash, block.height, block.timestamp, false, txIds, false, true) as MempoolTransactionExtended[];
 
       // fill in missing transaction fee data from verboseBlock
       for (let i = 0; i < transactions.length; i++) {
-        if (!transactions[i].fee && transactions[i].txid === verboseBlock.rawtx[i].txid) {
-          transactions[i].fee = (verboseBlock.rawtx[i].fee * 100_000_000) || 0;
+        if (!transactions[i].fee && transactions[i].txid === verboseBlock.tx[i].txid) {
+          transactions[i].fee = (verboseBlock.tx[i].fee * 100_000_000) || 0;
         }
       }
 

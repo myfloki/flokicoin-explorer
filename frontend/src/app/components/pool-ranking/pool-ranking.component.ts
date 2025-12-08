@@ -100,7 +100,7 @@ export class PoolRankingComponent implements OnInit {
       )
       .pipe(
         map(data => {
-          data['minersLuck'] = (100 * (data.blockCount / 1008)).toFixed(2); // luck 1w
+          data['minersLuck'] = (100 * (data.blockCount / 10080)).toFixed(2); // luck 1w at 1 min target
           return data;
         }),
         tap(data => {
@@ -322,4 +322,3 @@ export class PoolRankingComponent implements OnInit {
     return (e.offsetWidth < e.scrollWidth);
   }
 }
-

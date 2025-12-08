@@ -342,7 +342,7 @@ class Mining {
       let toTimestamp = Math.round(lastMidnight.getTime());
       const hashrates: any[] = [];
 
-      const totalDayIndexed = (await BlocksRepository.$blockCount(null, null)) / 144;
+      const totalDayIndexed = (await BlocksRepository.$blockCount(null, null)) / 1440;
       let indexedThisRun = 0;
       let totalIndexed = 0;
       let newlyIndexed = 0;

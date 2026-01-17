@@ -507,7 +507,11 @@ class ElectrsApi implements AbstractBitcoinApi {
   }
 
   async $getBatchedOutspends(txids: string[]): Promise<IEsploraApi.Outspend[][]> {
-    throw new Error('Method not implemented.');
+    const promises: Promise<IEsploraApi.Outspend[]>[] = [];
+    for (const txid of txids) {
+      promises.push(this.$getOutspends(txid));
+    }
+    return Promise.all(promises);
   }
 
   async $getBatchedOutspendsInternal(txids: string[]): Promise<IEsploraApi.Outspend[][]> {
